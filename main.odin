@@ -3,7 +3,7 @@ package main
 import rl "vendor:raylib"
 import "core:fmt"
 
-field :: struct {
+Field :: struct {
     owner : int,
     level : int,
     max_level: int,
@@ -13,12 +13,10 @@ main :: proc() {
     screenWidth     : i32 = 1280
     screenHeight    : i32 = 720
 
-    pottiyondirikka : bool = false
-
     numRows : i32 = 9
     numCols : i32 = 16
 
-    state : [9][16]field
+    state : [9][16]Field
 
     for i in 0..<numRows {
         for j in 0..<numCols {
@@ -33,7 +31,9 @@ main :: proc() {
     }
 
     numPlayers := 3
-    colors := [?]rl.Color{rl.WHITE, rl.RED, rl.GREEN, rl.BLUE}
+    colors := [?]rl.Color{rl.RED, rl.GREEN, rl.BLUE}
+    playerstatus := [?]bool{false, false, false}
+    firstTurn := true
     currentPlayer := 1
 
     row : i32 = 0
@@ -43,6 +43,24 @@ main :: proc() {
     rl.InitWindow(screenWidth, screenHeight, "Chain Reaction")
     rl.SetTargetFPS(60)
     for !rl.WindowShouldClose() {
+        if !firstTurn {
+            for i in 0..<numPlayers {
+                playerstatus[i] = false
+            }
+            for i in 0..<numRows {
+                for j in 0..<numCols {
+                    owner := state[i][j].owner
+                    if owner > 0 {
+                        playerstatus[owner-1] = true
+                    }
+                }
+            }
+            for !playerstatus[currentPlayer-1] {
+                currentPlayer += 1
+                if currentPlayer > numPlayers {currentPlayer=1}
+            }
+        }
+
         screenWidth = rl.GetScreenWidth()
         screenHeight = rl.GetScreenHeight()
 
@@ -80,7 +98,7 @@ main :: proc() {
 
         mousePos := rl.GetMousePosition()
         cp := fmt.caprintf("Current Player: %d", currentPlayer)
-        rl.DrawText(cp, rowWidth, rowHeight/8, rowHeight*3/4, colors[currentPlayer])
+        rl.DrawText(cp, rowWidth, rowHeight/8, rowHeight*3/4, colors[currentPlayer-1])
         mousePressed := rl.IsMouseButtonPressed(.LEFT)
         enterPressed := rl.IsKeyPressed(.ENTER)
         if mousePressed || enterPressed {
@@ -95,13 +113,14 @@ main :: proc() {
                     state[row][col].level += 1
                     currentPlayer += 1
                     if currentPlayer > numPlayers {
+                        firstTurn = false
                         currentPlayer = 1
                     }
                 }
             }
         }
 
-        rl.DrawRectangleLines((col+1)*rowWidth, (row+1)*rowHeight, rowWidth, rowHeight, colors[currentPlayer])
+        rl.DrawRectangleLines((col+1)*rowWidth, (row+1)*rowHeight, rowWidth, rowHeight, colors[currentPlayer-1])
 
         radius := f32(min(rowWidth, rowHeight)) / 2 - 2
         radius  = radius/2
@@ -110,7 +129,7 @@ main :: proc() {
                 if state[i][j].owner > 0 {
                     x := (j+1)*rowWidth + rowWidth/2
                     y := (i+1)*rowHeight + rowHeight/2
-                    pColor := colors[state[i][j].owner]
+                    pColor := colors[state[i][j].owner-1]
                     switch state[i][j].level {
                     case 1:
                         rl.DrawCircle(x, y, radius, pColor)
@@ -118,9 +137,9 @@ main :: proc() {
                         rl.DrawCircle(x-rowWidth/4, y, radius, pColor)
                         rl.DrawCircle(x+rowWidth/4, y, radius, pColor)
                     case 3:
-                        rl.DrawCircle(x, y - rowHeight/4, radius, pColor)
-                        rl.DrawCircle(x-rowWidth/4, y + rowHeight/4, radius, pColor)
-                        rl.DrawCircle(x+rowWidth/4, y + rowHeight/4, radius, pColor)
+                        rl.DrawCircle(x, y-rowHeight/4, radius, pColor)
+                        rl.DrawCircle(x-rowWidth/4, y+rowHeight/4, radius, pColor)
+                        rl.DrawCircle(x+rowWidth/4, y+rowHeight/4, radius, pColor)
                     }
                 }
             }
