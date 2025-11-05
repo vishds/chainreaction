@@ -80,7 +80,7 @@ main :: proc() {
 
         mousePos := rl.GetMousePosition()
         cp := fmt.caprintf("Current Player: %d", currentPlayer)
-        rl.DrawText(cp, 0, 0, 20, colors[currentPlayer])
+        rl.DrawText(cp, rowWidth, rowHeight/8, rowHeight*3/4, colors[currentPlayer])
         mousePressed := rl.IsMouseButtonPressed(.LEFT)
         enterPressed := rl.IsKeyPressed(.ENTER)
         if mousePressed || enterPressed {
