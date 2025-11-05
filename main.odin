@@ -15,10 +15,10 @@ main :: proc() {
 
     pottiyondirikka : bool = false
 
-    numRows : i32 = 16
-    numCols : i32 = 32
+    numRows : i32 = 9
+    numCols : i32 = 16
 
-    state : [16][32]field
+    state : [9][16]field
 
     for i in 0..<numRows {
         for j in 0..<numCols {
@@ -63,14 +63,32 @@ main :: proc() {
             xidx := xmargin+(i*rowWidth)
             rl.DrawLine(xidx, ymargin, xidx, ymargin+(numRows*rowHeight), rl.WHITE)
         }
-        
+
+        if rl.IsKeyPressed(.LEFT) {
+            col = max(col-1, 0)
+        }
+        if rl.IsKeyPressed(.RIGHT) {
+            col = min(col+1, numCols-1)
+        }
+        if rl.IsKeyPressed(.UP) {
+            row = max(row-1, 0)
+        }
+        if rl.IsKeyPressed(.DOWN) {
+            row = min(row+1, numRows-1)
+        }
+
+
         mousePos := rl.GetMousePosition()
         cp := fmt.caprintf("Current Player: %d", currentPlayer)
         rl.DrawText(cp, 0, 0, 20, colors[currentPlayer])
-        if rl.IsMouseButtonPressed(.LEFT) {
-            mousePos := rl.GetMousePosition()
-            col = (i32(mousePos.x) / rowWidth) - 1
-            row = (i32(mousePos.y) / rowHeight) - 1
+        mousePressed := rl.IsMouseButtonPressed(.LEFT)
+        enterPressed := rl.IsKeyPressed(.ENTER)
+        if mousePressed || enterPressed {
+            if mousePressed {
+                mousePos := rl.GetMousePosition()
+                col = (i32(mousePos.x) / rowWidth) - 1
+                row = (i32(mousePos.y) / rowHeight) - 1
+            }
             if row < numRows && row >= 0 && col < numCols && col >= 0 {
                 if state[row][col].owner == currentPlayer || state[row][col].owner == 0 {
                     state[row][col].owner = currentPlayer
@@ -82,6 +100,8 @@ main :: proc() {
                 }
             }
         }
+
+        rl.DrawRectangleLines((col+1)*rowWidth, (row+1)*rowHeight, rowWidth, rowHeight, colors[currentPlayer])
 
         radius := f32(min(rowWidth, rowHeight)) / 2 - 2
         radius  = radius/2
