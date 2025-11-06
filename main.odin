@@ -13,10 +13,10 @@ main :: proc() {
     screenWidth     : i32 = 1280
     screenHeight    : i32 = 720
 
-    numRows : i32 = 9
-    numCols : i32 = 16
+    numRows : i32 : 6
+    numCols : i32 : 9
 
-    state : [9][16]Field
+    state : [numRows][numCols]Field
 
     for i in 0..<numRows {
         for j in 0..<numCols {
@@ -30,9 +30,9 @@ main :: proc() {
         }
     }
 
-    numPlayers := 3
-    colors := [?]rl.Color{rl.RED, rl.GREEN, rl.BLUE}
-    playerstatus := [?]bool{false, false, false}
+    numPlayers : int : 4
+    colors := [numPlayers]rl.Color{rl.RED, rl.GREEN, rl.BLUE, rl.ORANGE}
+    playercount := [numPlayers]int{0, 0, 0, 0}
     firstTurn := true
     currentPlayer := 1
 
@@ -42,30 +42,44 @@ main :: proc() {
     rl.SetConfigFlags({.WINDOW_RESIZABLE})
     rl.InitWindow(screenWidth, screenHeight, "Chain Reaction")
     rl.SetTargetFPS(60)
-    for !rl.WindowShouldClose() {
-        if !firstTurn {
-            for i in 0..<numPlayers {
-                playerstatus[i] = false
-            }
-            for i in 0..<numRows {
-                for j in 0..<numCols {
-                    owner := state[i][j].owner
-                    if owner > 0 {
-                        playerstatus[owner-1] = true
-                    }
-                }
-            }
-            for !playerstatus[currentPlayer-1] {
-                currentPlayer += 1
-                if currentPlayer > numPlayers {currentPlayer=1}
-            }
-        }
 
+    for !rl.WindowShouldClose() {
         screenWidth = rl.GetScreenWidth()
         screenHeight = rl.GetScreenHeight()
 
         rowHeight   := screenHeight / (numRows+2)
         rowWidth    := screenWidth / (numCols+2)
+
+        if !firstTurn {
+            for i in 0..<numPlayers {
+                playercount[i] = 0
+            }
+            for i in 0..<numRows {
+                for j in 0..<numCols {
+                    owner := state[i][j].owner
+                    if owner > 0 {
+                        playercount[owner-1] += 1
+                    }
+                }
+            }
+            for playercount[currentPlayer-1] == 0 {
+                currentPlayer += 1
+                if currentPlayer > numPlayers {currentPlayer=1}
+            }
+
+            xindex  : f32 = f32(rowWidth)
+            barY    : f32 = f32(screenHeight) - f32(rowHeight)*0.75
+            barH    : f32 = f32(rowHeight)/4
+            sum     : f32 = 0
+            for c in playercount {
+                sum += f32(c)
+            }
+            for c, i in playercount {
+                w := f32(screenWidth-2*rowWidth)*(f32(c)/sum)
+                rl.DrawRectangleV({xindex, barY}, {w, barH}, colors[i])
+                xindex += w
+            }
+        }
 
         rl.BeginDrawing()
         rl.ClearBackground(rl.BLACK)
