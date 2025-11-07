@@ -2,6 +2,7 @@ package main
 
 import rl "vendor:raylib"
 import "core:fmt"
+import "core:math/rand"
 
 Field :: struct {
     owner : int,
@@ -36,6 +37,9 @@ main :: proc() {
     firstTurn := true
     currentPlayer := 1
 
+    bursting : bool = false
+    maxShake : i32  = 6
+
     row : i32 = 0
     col : i32 = 0
 
@@ -49,6 +53,14 @@ main :: proc() {
 
         rowHeight   := screenHeight / (numRows+2)
         rowWidth    := screenWidth / (numCols+2)
+
+        xmargin := rowWidth
+        ymargin := rowHeight
+
+        if bursting {
+            rowWidth += rand.int31_max(maxShake) - maxShake/2
+            rowHeight += rand.int31_max(maxShake) - maxShake/2
+        }
 
         if !firstTurn {
             for i in 0..<numPlayers {
@@ -83,9 +95,6 @@ main :: proc() {
 
         rl.BeginDrawing()
         rl.ClearBackground(rl.BLACK)
-
-        xmargin := rowWidth
-        ymargin := rowHeight
 
         for i in 0..=numRows {
             yidx := ymargin+(i*rowHeight)
@@ -159,9 +168,11 @@ main :: proc() {
             }
         }
 
+        bursting = false
         for i in 0..<numRows {
             for j in 0..<numCols {
                 if state[i][j].level > state[i][j].max_level {
+                    bursting = true
                     player := state[i][j].owner
                     state[i][j].level = 0
                     state[i][j].owner = 0
