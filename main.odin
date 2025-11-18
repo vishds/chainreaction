@@ -10,12 +10,20 @@ Field :: struct {
     max_level: int,
 }
 
+MAX_PLAYERS : int : 8
+COLORS := [MAX_PLAYERS]rl.Color{
+    rl.RED, rl.GREEN, rl.BLUE, rl.ORANGE,
+    rl.PINK, rl.WHITE, rl.PURPLE, rl.SKYBLUE,
+}
+PLAYER_COUNT : [MAX_PLAYERS]int
+
 main :: proc() {
+
     screenWidth     : i32 = 1280
     screenHeight    : i32 = 720
 
-    numRows : i32 : 6
-    numCols : i32 : 9
+    numRows : i32 : 5
+    numCols : i32 : 5
 
     state : [numRows][numCols]Field
 
@@ -31,9 +39,9 @@ main :: proc() {
         }
     }
 
-    numPlayers : int : 4
-    colors := [numPlayers]rl.Color{rl.RED, rl.GREEN, rl.BLUE, rl.ORANGE}
-    playercount := [numPlayers]int{0, 0, 0, 0}
+    numPlayers := 4
+    colors := COLORS[:numPlayers]
+    playercount := PLAYER_COUNT[:numPlayers]
     firstTurn := true
     currentPlayer := 1
 
@@ -56,6 +64,9 @@ main :: proc() {
 
         xmargin := rowWidth
         ymargin := rowHeight
+
+        radius := f32(min(rowWidth, rowHeight)) / 2 - 2
+        radius  = radius/2
 
         if bursting {
             rowWidth += rand.int31_max(maxShake) - maxShake/2
@@ -120,6 +131,7 @@ main :: proc() {
 
 
         mousePos := rl.GetMousePosition()
+        rl.DrawCircleV(mousePos, radius, rl.Fade(colors[currentPlayer-1], 0.5))
         cp := fmt.caprintf("Current Player: %d", currentPlayer)
         rl.DrawText(cp, rowWidth, rowHeight/8, rowHeight*3/4, colors[currentPlayer-1])
         mousePressed := rl.IsMouseButtonPressed(.LEFT)
@@ -145,8 +157,6 @@ main :: proc() {
 
         rl.DrawRectangleLines((col+1)*rowWidth, (row+1)*rowHeight, rowWidth, rowHeight, colors[currentPlayer-1])
 
-        radius := f32(min(rowWidth, rowHeight)) / 2 - 2
-        radius  = radius/2
         for i in 0..<numRows {
             for j in 0..<numCols {
                 if state[i][j].owner > 0 {
